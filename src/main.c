@@ -9,12 +9,12 @@
 #include <sys/types.h>
 
 #include "../include/helper_messages.h"
-//#include "../include/assembler/assembler.h"
+// #include "../include/assembler/assembler.h"
 #include "../include/tinyRiscMain.hpp"
 #include "../include/debug_logger.h"
 bool DEBUG = false;
 
-unsigned long parseToUL(const char *optarg, const char *operation) //TODO checken ob alles geclosed wird bei Fehler!
+unsigned long parseToUL(const char *optarg, const char *operation) // TODO checken ob alles geclosed wird bei Fehler!
 {
     if (optarg[0] == '-')
     {
@@ -43,27 +43,32 @@ unsigned long parseToUL(const char *optarg, const char *operation) //TODO checke
     return result;
 }
 
-uint32_t parseBinToUL(const char *inst) {
-    if (inst == NULL || *inst == '\0') {
+uint32_t parseBinToUL(const char *inst)
+{
+    if (inst == NULL || *inst == '\0')
+    {
         fprintf(stderr, "Error: Instruction is empty or null\n");
         return UINT32_MAX;
     }
-    char* endptr;
+    char *endptr;
     errno = 0;
     uint32_t result = strtoul(inst, &endptr, 2);
-    if (errno == ERANGE) {
+    if (errno == ERANGE)
+    {
         fprintf(stderr, "Error: Instruction '%s' is out of range for a 32-bit unsigned integer.\n", inst);
         return UINT32_MAX;
     }
-    if (errno == EINVAL || endptr == inst) {
+    if (errno == EINVAL || endptr == inst)
+    {
         fprintf(stderr, "Error: Invalid instruction found %s\n", inst);
         return UINT32_MAX;
     }
     return result;
 }
 
-void convertInstructions() {
-    //TODO
+void convertInstructions()
+{
+    // TODO
 }
 
 int parse_cli(int argc, char **argv, char **input_file, uint32_t *cycles, char **trace_file, const char **terminal_file, uint32_t *latency)
@@ -76,12 +81,11 @@ int parse_cli(int argc, char **argv, char **input_file, uint32_t *cycles, char *
         {"latency", required_argument, 0, 'l'},
         {"help", no_argument, 0, 'h'},
         {"debug", no_argument, 0, 'd'},
-        {0, 0, 0, 0}
-    };
+        {0, 0, 0, 0}};
 
     // Standartwerte
-    *cycles = 20;
-    *latency = 1;
+    *cycles = 1000;
+    *latency = 30;
 
     int opt;
     while ((opt = getopt_long(argc, argv, "c:t:f:l:hd", long_options, NULL)) != -1)
@@ -120,7 +124,7 @@ int parse_cli(int argc, char **argv, char **input_file, uint32_t *cycles, char *
     if (optind >= argc)
     {
         fprintf(stderr, "No input file specified.\n");
-        //print_help_message();
+        // print_help_message();
         return 1;
     }
 
@@ -199,13 +203,14 @@ int main(int argc, char **argv)
         return result;
     }
 
-    if (trace_file != NULL) {
-        if(!validate_write(trace_file)) {
+    if (trace_file != NULL)
+    {
+        if (!validate_write(trace_file))
+        {
             fprintf(stderr, "The provided trace file path ('%s') is not writable\n", trace_file);
             return EXIT_FAILURE;
         }
     }
-
 
     // Decides if the Output is the Terminal File then validate it or else set terminalToStdout to true
     if (terminal_file != NULL)
@@ -239,7 +244,7 @@ int main(int argc, char **argv)
         fclose(fileInputInstructions);
         return 1;
     }
-    size_t numberOfInstructions = (file_size + 1) / 33; // Dateigröße/33 Byte ergibt numberOfInstructions
+    size_t numberOfInstructions = (file_size + 1) / 33;      // Dateigröße/33 Byte ergibt numberOfInstructions
     uint32_t numberOfInstructionsInt = (file_size + 1) / 33; // Dateigröße/4 Byte ergibt numberOfInstructions
     uint32_t *instructions = (uint32_t *)malloc((numberOfInstructions + 1) * sizeof(uint32_t));
     if (instructions == NULL)
@@ -251,8 +256,9 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    char *instruction = (char*) malloc(34);
-    if (instruction == NULL) {
+    char *instruction = (char *)malloc(34);
+    if (instruction == NULL)
+    {
         fprintf(stderr, "Failed to allocate memory for instruction.\n");
         fclose(fileInputInstructions);
         free(inputInstructions);
@@ -260,17 +266,19 @@ int main(int argc, char **argv)
     }
 
     int i = 1;
-    while (i <= numberOfInstructions) {
-        instruction[32] = 'f'; //change the pre to last character in order to find short instructions
-        if (fgets(instruction, 34, fileInputInstructions) == NULL) {
+    while (i <= numberOfInstructions)
+    {
+        instruction[32] = 'f'; // change the pre to last character in order to find short instructions
+        if (fgets(instruction, 34, fileInputInstructions) == NULL)
+        {
             fprintf(stderr, "Failed to read line in input file. \n");
         }
 
         _debug("Instruction Number %i: %s", i, instruction);
 
         uint32_t instUint = parseBinToUL(instruction);
-        if ((instruction[32] != '\n' && i < numberOfInstructions)
-            || (!(instruction[32] == 0x00 || instruction[32] == '\n') && i == numberOfInstructions)) {
+        if ((instruction[32] != '\n' && i < numberOfInstructions) || (!(instruction[32] == 0x00 || instruction[32] == '\n') && i == numberOfInstructions))
+        {
             fprintf(stderr, "Failed to read instruction. Length of instruction %i is not 32 bit.\n", i);
             fclose(fileInputInstructions);
             free(inputInstructions);
@@ -280,7 +288,8 @@ int main(int argc, char **argv)
 
         _debug("Instruction Number %i in uint: 0x%x\n", i, instUint);
 
-        if (instUint == UINT32_MAX) {
+        if (instUint == UINT32_MAX)
+        {
             fclose(fileInputInstructions);
             free(inputInstructions);
             free(instruction);
@@ -299,12 +308,13 @@ int main(int argc, char **argv)
     _debug("st\n");
     _debug("end of main, start of simulation:\n");
 
-
     struct Result resultStruct = run_simulation(cycles, trace_file, instructions, terminalToStdout, latency);
 
-    if (!terminalToStdout) {
+    if (!terminalToStdout)
+    {
         _debug("Terminal to stdout: writing in File\n");
-        if (validate_write(terminal_file)) {
+        if (validate_write(terminal_file))
+        {
             FILE *terFile = fopen(terminal_file, "w");
             fprintf(terFile, "%s\n", resultStruct.output);
             fclose(terFile);

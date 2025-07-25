@@ -35,7 +35,7 @@ SC_MODULE(TINY_RISC)
   MULTIPLEXER_I32 muxMemR;
   MULTIPLEXER_I32 muxAluRo;
   MULTIPLEXER_BOOLEAN muxCUSelectReady; // New Multiplexer to select the source of the memory signal
-  MULTIPLEXER_BOOLEAN muxW;            // New Multiplexer to select the source of the memory signal
+  MULTIPLEXER_BOOLEAN muxW;             // New Multiplexer to select the source of the memory signal
 
   sc_signal<uint32_t> rf_r1_muxReg1;
   sc_signal<uint32_t> muxReg1_r1_alu;
@@ -62,19 +62,19 @@ SC_MODULE(TINY_RISC)
 
   sc_signal<bool> mm_ready_muxCUSelectReady;
   sc_signal<bool> cu_r_mm;
-  sc_signal<bool> muxW_w_mm;                // changed from cu_w_mm to muxW_w_mm
-  sc_signal<bool> muxCUSelectReady_CU;      // new signal Multiplexer to CU for ready signal
-  sc_signal<bool> terminal_muxCuSelRed;     // new signal Terminal to Mux for ready signal
-  sc_signal<bool> cu_w_muxW;                // new signal from cu to muxWe
-  sc_signal<bool> muxW_w_terminal;          // new signal muxWe to Terminal
+  sc_signal<bool> muxW_w_mm;            // changed from cu_w_mm to muxW_w_mm
+  sc_signal<bool> muxCUSelectReady_CU;  // new signal Multiplexer to CU for ready signal
+  sc_signal<bool> terminal_muxCuSelRed; // new signal Terminal to Mux for ready signal
+  sc_signal<bool> cu_w_muxW;            // new signal from cu to muxWe
+  sc_signal<bool> muxW_w_terminal;      // new signal muxWe to Terminal
 
-  sc_signal<uint32_t> muxReg1_memAddr_CU;           // new signal from muxReg1 to the CU
+  sc_signal<uint32_t> muxReg1_memAddr_CU; // new signal from muxReg1 to the CU
   sc_signal<uint32_t> muxReg1_muxMemAddr;
   sc_signal<uint32_t> cu_addr_muxMemAddr;
   sc_signal<uint32_t> muxMemAddr_addr_mm;
   sc_signal<uint32_t> muxReg1_addr_Terminal;
   sc_signal<uint32_t> muxReg2_wData_Terminal;
-  sc_signal<uint32_t> cu_imm_MuxRegW; //new signal for Imm values
+  sc_signal<uint32_t> cu_imm_MuxRegW; // new signal for Imm values
 
   sc_signal<sc_bv<5>> cu_a1_rf;
   sc_signal<sc_bv<5>> cu_a2_rf;
@@ -96,11 +96,12 @@ SC_MODULE(TINY_RISC)
             std::map<uint32_t, uint32_t> initialMemory,
             uint32_t period,
             uint32_t latency,
+            uint32_t lastAddress,
             bool terminalToStdout)
       : sc_module(name),
         clk("clk", period, SC_NS),
         initialMemory(initialMemory),
-        pc("pc"),
+        pc("pc", lastAddress),
         rf("rf"),
         alu("alu"),
         mm("mm"),
@@ -162,16 +163,16 @@ SC_MODULE(TINY_RISC)
     cu.datain.bind(muxMemR_rdata_cu);
     muxMemR.out[0](muxMemR_rdata_cu);
     muxRegW.in[1](muxMemR_muxRegW);
-    muxRegW.in[2](cu_imm_MuxRegW);          // Bind new Imm Signal to MuxRegW
+    muxRegW.in[2](cu_imm_MuxRegW); // Bind new Imm Signal to MuxRegW
     muxMemR.out[1](muxMemR_muxRegW);
-    cu.imm.bind(cu_imm_MuxRegW);         // Bind new Imm Signal to CU
+    cu.imm.bind(cu_imm_MuxRegW); // Bind new Imm Signal to CU
     // 1.5
     cu.memready.bind(muxCUSelectReady_CU); // changed input to Multiplexer singal
     mm.r.bind(cu_r_mm);
     cu.rmem.bind(cu_r_mm);
     mm.w.bind(muxW_w_mm);
-    //cu.wmem.bind(cu_w_muxW);
-    // 1.6
+    // cu.wmem.bind(cu_w_muxW);
+    //  1.6
     muxMemAddr.in[0](muxReg1_muxMemAddr);
     muxReg1.out[2](muxReg1_muxMemAddr);
     muxMemAddr.in[1](cu_addr_muxMemAddr);

@@ -4,27 +4,35 @@
 
 #include "../include/risc/tinyRISC.hpp"
 
-void initializeMemory(std::map<uint32_t, uint32_t> &initial_memory, const uint32_t* instructions) {
+#define INITIAL_PC ((uint32_t)0x00001000)
+
+void initializeMemory(std::map<uint32_t, uint32_t> &initial_memory, const uint32_t *instructions)
+{
     uint32_t number_of_instructions = *instructions;
     _debug("Number of Instructions: %i \n", number_of_instructions);
     int j = 1;
-    for (uint32_t i = 0 ; j <= number_of_instructions; i = i + 4) {
-        uint32_t currentPos = i + 0x00001000;
+    for (uint32_t i = 0; j <= number_of_instructions; i = i + 4)
+    {
+        uint32_t currentPos = i + INITIAL_PC;
         initial_memory[currentPos] = instructions[j];
         _debug("Instruction %i: 0x%x at %u.\n", j, instructions[j], currentPos);
         j++;
     }
 }
 
-Result run_simulation(uint32_t cycles, const char* tracefile, uint32_t* instructions, char terminalToStdout, uint32_t latency) {
+Result run_simulation(uint32_t cycles, const char *tracefile, uint32_t *instructions, char terminalToStdout, uint32_t latency)
+{
     std::map<uint32_t, uint32_t> initial_memory;
+    uint32_t number_of_instructions = *instructions;
+    uint32_t lastAddress = INITIAL_PC + 4 * number_of_instructions;
     initializeMemory(initial_memory, instructions);
-    uint32_t period = 1; //TODO checken, was ist period??
-    TINY_RISC tiny_risc("tiny_risc", initial_memory, period, latency, terminalToStdout);
+    uint32_t period = 1; // TODO checken, was ist period??
+    TINY_RISC tiny_risc("tiny_risc", initial_memory, period, latency, lastAddress, terminalToStdout);
 
     // Tracefile setup
     sc_trace_file *tf = nullptr;
-    if(tracefile && tracefile[0] != '\0') {
+    if (tracefile && tracefile[0] != '\0')
+    {
         tf = sc_create_vcd_trace_file(tracefile);
         sc_trace(tf, tiny_risc.clk, "clk");
         sc_trace(tf, tiny_risc.pc.pc, "pc_value");
@@ -34,7 +42,7 @@ Result run_simulation(uint32_t cycles, const char* tracefile, uint32_t* instruct
         sc_trace(tf, tiny_risc.cu.select, "cu_select");
         sc_trace(tf, tiny_risc.rf.wdata, "rf_wData");
 
-        //TODO: Add more signals to trace if needed
+        // TODO: Add more signals to trace if needed
     }
 
     // Bind signals
@@ -48,13 +56,15 @@ Result run_simulation(uint32_t cycles, const char* tracefile, uint32_t* instruct
     sc_start(static_cast<int>(cycles * period), SC_NS);
     _debug("Finished simulation.\n");
 
-    if(tf) {
+    if (tf)
+    {
         sc_close_vcd_trace_file(tf);
     }
 
     // Prepare collected results from simulation
-    char *terminal_file_content = (char*)malloc(tiny_risc.terminal.s.size() + 1);
-    if (!terminal_file_content) {
+    char *terminal_file_content = (char *)malloc(tiny_risc.terminal.s.size() + 1);
+    if (!terminal_file_content)
+    {
         fprintf(stdout, "Failed to alloc memory for terminal file content");
         exit(EXIT_FAILURE);
     }
@@ -65,15 +75,15 @@ Result run_simulation(uint32_t cycles, const char* tracefile, uint32_t* instruct
 
     _debug("clks in Terminal Module: %i\n", tiny_risc.terminal.clks)
 
-    //uint32_t elapsed_cycles = static_cast<uint32_t>(sc_time_stamp().to_seconds()) / period;
-    uint32_t elapsed_cycles = tiny_risc.pc.totalClks;
+        // uint32_t elapsed_cycles = static_cast<uint32_t>(sc_time_stamp().to_seconds()) / period;
+        uint32_t elapsed_cycles = tiny_risc.pc.totalClks;
     _debug("Cycles ran: %u\n", elapsed_cycles);
 
-    return Result {elapsed_cycles, terminal_file_content, output_operations}; //
+    return Result{elapsed_cycles, terminal_file_content, output_operations}; //
 };
 
-int sc_main(int argc, char* argv[]) {
+int sc_main(int argc, char *argv[])
+{
     std::cout << "ERROR. Please run through the project executable." << std::endl;
     return 1;
 }
-
