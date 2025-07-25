@@ -21,6 +21,9 @@ SC_MODULE(TINY_RISC)
 
   std::map<uint32_t, uint32_t> initialMemory;
 
+  // Global cycle counter to track all simulation cycles including latency
+  uint32_t totalCycles;
+
   PC pc;
   REGISTER_FILE rf;
   ALU alu;
@@ -101,6 +104,7 @@ SC_MODULE(TINY_RISC)
       : sc_module(name),
         clk("clk", period, SC_NS),
         initialMemory(initialMemory),
+        totalCycles(0),
         pc("pc", lastAddress),
         rf("rf"),
         alu("alu"),
@@ -244,6 +248,7 @@ SC_MODULE(TINY_RISC)
     while (true)
     {
       //_debug("Behaviour of tinyRISC started \n");
+      totalCycles++; // Count every clock cycle
       wait();
       if (reset.read())
       {
@@ -254,6 +259,7 @@ SC_MODULE(TINY_RISC)
 
   void doReset()
   {
+    totalCycles = 0; // Reset the global cycle counter
     pc.pcValue = 0x00001000;
     for (int i = 0; i < 32; i++)
     {

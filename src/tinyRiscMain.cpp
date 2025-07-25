@@ -75,9 +75,10 @@ Result run_simulation(uint32_t cycles, const char *tracefile, uint32_t *instruct
 
     _debug("clks in Terminal Module: %i\n", tiny_risc.terminal.clks)
 
-        // uint32_t elapsed_cycles = static_cast<uint32_t>(sc_time_stamp().to_seconds()) / period;
-        uint32_t elapsed_cycles = tiny_risc.pc.totalClks;
-    _debug("Cycles ran: %u\n", elapsed_cycles);
+        // Use the global cycle counter that includes all latency cycles
+        uint32_t elapsed_cycles = tiny_risc.totalCycles;
+    _debug("Total simulation cycles (including latency): %u\n", elapsed_cycles);
+    _debug("PC instruction cycles: %u\n", tiny_risc.pc.totalClks);
 
     return Result{elapsed_cycles, terminal_file_content, output_operations}; //
 };
