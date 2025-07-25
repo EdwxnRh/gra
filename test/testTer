@@ -1,0 +1,27 @@
+and x7, x7, x7
+and x7, x7, x7
+inc x1, x1
+sub x2, x3, x1
+inc x4, x4,
+inc x4, x4,
+add x4, x4, x4
+add x4, x4, x4
+add x4, x4, x4
+add x4, x4, x4
+add x4, x4, x4
+li x4, 72
+sd x4, x2
+li x4, 65
+sd x4, x2
+li x4, 76
+sd x4, x2
+li x4, 76
+sd x4, x2
+li x4, 79
+sd x4, x2
+add x1, x1, x1
+add x1, x1, x1
+li x4, 84
+sd x4, x2
+add x1, x1, x1
+add x1, x1, x1

@@ -1,0 +1,6 @@
+project
+assembler
+.vscode
+test/test.out
+*.out
+*.vcd
